@@ -14,7 +14,7 @@ Modern terminal usage has shifted. We no longer just run scripts; we interact wi
 
 Instead of reaching for the mouse or retyping, `quote_history` treats every quoted string in a command's stdout as a **potential next command**. 
 
-### The Core Protocol
+### The Core
 For this to become a seamless ecosystem standard, the pipeline relies on two components:
 1. **qh_extension.sh** place this to your ~/.local/bin/, this is your redirector and hostory browser/consumer
 2. **qt_extractor** C regex parser -> extracts quoted content into ~/.quote_history, should be executable in $PATH
