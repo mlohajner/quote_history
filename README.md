@@ -1,4 +1,4 @@
-# quote_history 📜🚀
+# Quote_history 📜🚀
 
 > **Why copy-paste when your terminal can read between the lines?**
 
