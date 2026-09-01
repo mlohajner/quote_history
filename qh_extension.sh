@@ -21,7 +21,6 @@ qh_debug() {
 	exec 20>&2
 
 	exec > >(tee -a "$_qh_tmp" >&19) 2>&1
-	RENDER_ECHO
 }
 
 qh_prompt() {
