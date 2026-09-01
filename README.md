@@ -2,7 +2,7 @@
 
 > **Why copy-paste when your terminal can read between the lines?**
 
-`quote_history` is a lightweight, non-intrusive protocol and Shell enhancement that introduces a **secondary history stream** to your terminal. While `.bash_history` tracks what you *type*, `quote_history` automatically extracts what you *see* (code blocks, command examples, and quoted tips) and maps them directly to your keyboard.
+`quote_history` is a lightweight, non-intrusive Shell enhancement that introduces a **secondary history stream** to your terminal. While `.bash_history` tracks what you *type*, `quote_history` automatically extracts what you *see* (code blocks, command examples, and quoted tips) and maps them directly to your keyboard.
 
 Pressing `ALT+UP` / `ALT+DOWN` cycles through the high-value snippets extracted from your commands' outputs, completely eliminating mouse highlighting and copy-pasting.
 
