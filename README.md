@@ -24,7 +24,7 @@ For this to become a seamless ecosystem standard, the pipeline relies on two com
 ## 🔥 Features
 
 * ⚡ **Zero Friction:** No mouse, no clipboard managers. Just `ALT+UP`.
-* 🧠 **Context-Aware:** Captures only the executable actions or terms you actually care about.
+* 🧠 **Context-Aware:** Captures all quoted text, actions or terms you actually care about.
 * 🧹 **Auto-Deduplicated:** Keeps your history clean and chronologically relevant.
 * 🛠️ **Universal Interoperability:** Easily pipes into `man`, `curl`, custom scripts, or LLM CLI outputs.
 
