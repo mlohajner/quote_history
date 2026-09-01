@@ -16,8 +16,9 @@ Instead of reaching for the mouse or retyping, `quote_history` treats every quot
 
 ### The Core Protocol
 For this to become a seamless ecosystem standard, the pipeline relies on two components:
-1. **The Context Parser:** Reads `stdout`, extracts matches via Regex, and appends unique tokens to `~/.quote_history`.
-2. **The Readline Widget:** Binds `ALT+UP` / `ALT+DOWN` to instantly inject the history into your active prompt buffer.
+1. **qh_extension.sh** place this to your ~/.local/bin/, this is your redirector and hostory browser/consumer
+2. **qt_extractor** C regex parser -> extracts quoted content into ~/.quote_history, should be executable in $PATH
+3. **.bashrc** add one line to your `.bashrc` to enable the extension `. ~/.local/bin/qh_extension.sh`
 
 ---
 
