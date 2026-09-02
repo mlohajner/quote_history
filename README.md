@@ -18,6 +18,7 @@ Instead of reaching for the mouse or retyping, `quote_history` treats every quot
 For this to become a seamless ecosystem standard, the pipeline relies on two components:
 1. **qh_extension.sh** place this to your ~/.local/bin/, this is your redirector and hostory browser/consumer
 2. **qt_extractor** C regex parser -> extracts quoted content into ~/.quote_history, should be executable in $PATH
+   current extraction method looks for quoted text, but I see no reason why your extractor couldn't be more elaborated
 3. **.bashrc** add one line to your `.bashrc` to enable the extension `. ~/.local/bin/qh_extension.sh`
 
 ---
