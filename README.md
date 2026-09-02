@@ -25,8 +25,23 @@ For this to become a seamless ecosystem standard, the pipeline relies on two com
 
 ## 🔥 Features
 
-* ⚡ **Zero Friction:** No mouse, no clipboard managers. Just `ALT+UP`.
-* 🧠 **Context-Aware:** Captures all quoted text, actions or terms you actually care about.
-* 🛠️ **Universal Interoperability:** Easily pipes into `man`, `curl`, custom scripts, or LLM CLI outputs.
+- ⚡ **Zero Friction:** No mouse, no clipboard managers. Just `ALT+UP`.
+- 🧠 **Context-Aware:** Captures all quoted text, actions or terms you actually care about.
+- 🛠 **Universal Interoperability:** Easily pipes into `man`, `curl`, custom scripts, or LLM CLI outputs.
+- ❌ **On-the-Fly Purging (New!):** Instantly remove unwanted or sensitive snippets from your stream using `ALT+DELETE`.
 
 ---
+
+## 🎹 Keyboard Shortcuts & Ergonomics
+
+| Shortcut | Action | Description |
+|---|---|---|
+| **`ALT + UP`** | Browse Up | Cycle backward through high-value extracted snippets. |
+| **`ALT + DOWN`** | Browse Down | Cycle forward through snippets or return to your original prompt. |
+| **`ALT + DELETE`** | Purge Snippet | Permanently delete the currently viewed snippet from history in real-time. |
+
+### Why `ALT + DELETE`?
+We designed the shortcuts with terminal ergonomics and safety in mind:
+1. **Friction by Design:** The `Delete` key sits in a separate block on most keyboards. You will never accidentally trigger it while cycling with `ALT+UP/DOWN`.
+2. **No Conflict with Editing:** If you want to modify a snippet before executing it, your muscle memory naturally targets `Backspace` or arrow keys. `ALT+DELETE` remains strictly reserved for permanent management.
+3. **Privacy First:** If an LLM response or compiler output accidentally leaks a token, a password, or a massive wall of useless text into your stream, you can wipe it from your disk (`~/.quote_history`) instantly without opening a text editor.
