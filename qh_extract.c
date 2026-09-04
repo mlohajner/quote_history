@@ -51,7 +51,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <regex.h>
 
 #define QH_RS 0x1E
 
@@ -197,71 +196,28 @@ static char *read_whole_file(const char *path, size_t *out_len) {
 }
 
 /* ============================================================
- * POSIX regular expressions
+ * Delimiter search
+ *
+ * All delimiters used by this tool are fixed literal byte
+ * sequences (`, ', ", ```), so a plain linear scan replaces the
+ * POSIX regex engine used by earlier versions of this tool.
  * ============================================================ */
 
-static regex_t re_triple;
-static regex_t re_backtick;
-static regex_t re_single;
-static regex_t re_double;
-
-static void regex_compile(regex_t *re, const char *pattern)
-{
-	int rc = regcomp(re, pattern, REG_EXTENDED);
-
-	if (rc != 0) {
-		char errbuf[256];
-		regerror(rc, re, errbuf, sizeof(errbuf));
-		fprintf(stderr, "regex compile error for /%s/: %s\n", pattern, errbuf);
-		exit(EXIT_FAILURE);
-	}
-}
-
-static void regex_init(void)
-{
-	regex_compile(&re_triple, "```");
-	regex_compile(&re_backtick, "`");
-	regex_compile(&re_single, "'");
-	regex_compile(&re_double, "\"");
-}
-
-static void regex_free(void)
-{
-	regfree(&re_triple);
-	regfree(&re_backtick);
-	regfree(&re_single);
-	regfree(&re_double);
-}
-
-static int regex_find(const regex_t *re, const char *text, size_t len,
-			size_t from, size_t *match_start, size_t *match_end) {
-	if (from >= len)
+static int find_delim(const char *text, size_t len, size_t from,
+			const char *delim, size_t delim_len,
+			size_t *match_start, size_t *match_end) {
+	if (from >= len || len - from < delim_len)
 		return 0;
 
-	regmatch_t m;
-
-	int rc = regexec(re, text + from, 1, &m, 0);
-
-	if (rc == REG_NOMATCH)
-		return 0;
-
-	if (rc != 0) {
-		char errbuf[256];
-		regerror(rc, re, errbuf, sizeof(errbuf));
-		fprintf(stderr, "regex execution error: %s\n", errbuf);
-		exit(EXIT_FAILURE);
+	for (size_t i = from; i + delim_len <= len; i++) {
+		if (memcmp(text + i, delim, delim_len) == 0) {
+			*match_start = i;
+			*match_end = i + delim_len;
+			return 1;
+		}
 	}
 
-	size_t start = from + (size_t)m.rm_so;
-	size_t end = from + (size_t)m.rm_eo;
-
-	if (start > len || end > len || end < start)
-		return 0;
-
-	*match_start = start;
-	*match_end = end;
-
-	return 1;
+	return 0;
 }
 
 /* ============================================================
@@ -306,77 +262,15 @@ static int find_closing_quote(const char *text, size_t len,
 }
 
 /* ============================================================
- * Triple-backtick pass
- * ============================================================ */
-
-static char *extract_triple_backticks(const char *text,
-					size_t len, EntryList *entries, size_t *out_len) {
-	char *rest = xmalloc(len + 1);
-
-	size_t rest_len = 0;
-	size_t pos = 0;
-
-	while (pos < len) {
-		size_t open_start;
-		size_t open_end;
-
-		if (!regex_find(&re_triple, text, len, pos, &open_start, &open_end)) {
-			memcpy(rest + rest_len, text + pos, len - pos);
-			rest_len += len - pos;
-			break;
-		}
-
-		size_t close_start;
-
-		if (!find_closing_quote(text, len, open_end, "```", 3, &close_start)) {
-
-/*
- * No closing triple-backtick.
- * Leave it untouched as normal text.
- */
-			memcpy(rest + rest_len, text + pos, len - pos);
-
-			rest_len += len - pos;
-			break;
-		}
-
-/*
- * Copy text before the opening delimiter.
- */
-		if (open_start > pos) {
-			size_t n = open_start - pos;
-			memcpy(rest + rest_len, text + pos, n);
-			rest_len += n;
-		}
-
-/*
- * Extract the content between the delimiters.
- */
-		size_t content_start = open_end;
-		size_t content_len = close_start - content_start;
-
-		entrylist_push(entries, text + content_start, content_len
-		);
-
-/*
- * Continue after the closing delimiter.
- */
-		pos = close_start + 3;
-	}
-
-	rest[rest_len] = '\0';
-	*out_len = rest_len;
-
-	return rest;
-}
-
-/* ============================================================
  * Generic quote pass
+ *
+ * Handles both ```...``` blocks and the single-byte `/'/" quotes;
+ * the only difference between them is the delimiter passed in.
  * ============================================================ */
 
-static char *extract_delimited_quotes(const char *text,
-			size_t len, const regex_t *regex, const char *delimiter,
-			size_t delimiter_len, EntryList *entries, size_t *out_len) {
+static char *extract_quotes(const char *text, size_t len,
+			const char *delimiter, size_t delimiter_len,
+			EntryList *entries, size_t *out_len) {
 	char *rest = xmalloc(len + 1);
 
 	size_t rest_len = 0;
@@ -386,7 +280,8 @@ static char *extract_delimited_quotes(const char *text,
 		size_t open_start;
 		size_t open_end;
 
-		if (!regex_find(regex, text, len, pos, &open_start, &open_end)) {
+		if (!find_delim(text, len, pos, delimiter, delimiter_len,
+						&open_start, &open_end)) {
 			memcpy(rest + rest_len, text + pos, len - pos);
 			rest_len += len - pos;
 			break;
@@ -395,7 +290,8 @@ static char *extract_delimited_quotes(const char *text,
 		size_t close_start;
 
 		if (!find_closing_quote(text, len, open_end, delimiter,
-										delimiter_len,&close_start)) {
+						delimiter_len, &close_start)) {
+
 /*
  * No closing delimiter.
  * Leave the remaining text untouched.
@@ -494,7 +390,6 @@ int main(int argc, char **argv) {
 	const char *dst_path = argv[2];
 
 	qh_mode_t mode = (argc == 4) ? MODE_GROUPED : MODE_FLAT;
-	regex_init();
 
 /*
  * Read the source file.
@@ -513,7 +408,7 @@ int main(int argc, char **argv) {
  */
 	size_t rest_len;
 
-	char *rest = extract_triple_backticks(text, len, &entries, &rest_len);
+	char *rest = extract_quotes(text, len, "```", 3, &entries, &rest_len);
 	free(text);
 
 /*
@@ -522,8 +417,7 @@ int main(int argc, char **argv) {
  */
 	size_t rest2_len;
 
-	char *rest2 = extract_delimited_quotes(rest, rest_len, &re_backtick,
-			"`", 1, &entries, &rest2_len);
+	char *rest2 = extract_quotes(rest, rest_len, "`", 1, &entries, &rest2_len);
 	free(rest);
 
 /*
@@ -532,8 +426,7 @@ int main(int argc, char **argv) {
  */
 	size_t rest3_len;
 
-	char *rest3 = extract_delimited_quotes(rest2, rest2_len, &re_single,
-			"'", 1, &entries, &rest3_len);
+	char *rest3 = extract_quotes(rest2, rest2_len, "'", 1, &entries, &rest3_len);
 	free(rest2);
 
 /*
@@ -542,8 +435,7 @@ int main(int argc, char **argv) {
  */
 	size_t rest4_len;
 
-	char *rest4 = extract_delimited_quotes(rest3, rest3_len, &re_double,
-			"\"", 1, &entries, &rest4_len);
+	char *rest4 = extract_quotes(rest3, rest3_len, "\"", 1, &entries, &rest4_len);
 
 	free(rest3);
 	free(rest4);
@@ -557,7 +449,6 @@ int main(int argc, char **argv) {
 			perror(dst_path);
 
 			entrylist_free(&entries);
-			regex_free();
 
 			return EXIT_FAILURE;
 		}
@@ -574,14 +465,12 @@ int main(int argc, char **argv) {
 			perror("fclose");
 
 			entrylist_free(&entries);
-			regex_free();
 
 			return EXIT_FAILURE;
 		}
 	}
 
 	entrylist_free(&entries);
-	regex_free();
 
 	return EXIT_SUCCESS;
 }
