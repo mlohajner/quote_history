@@ -41,7 +41,7 @@ For this to become a seamless ecosystem standard, the pipeline relies on two com
 | **`ALT + DELETE`** | Purge Snippet | Permanently delete the currently viewed snippet from history in real-time. |
 
 ### Why `ALT + DELETE`?
-We designed the shortcuts with terminal ergonomics and safety in mind:
+Shortcuts with terminal ergonomics and safety in mind:
 1. **Friction by Design:** The `Delete` key sits in a separate block on most keyboards. You will never accidentally trigger it while cycling with `ALT+UP/DOWN`.
 2. **No Conflict with Editing:** If you want to modify a snippet before executing it, your muscle memory naturally targets `Backspace` or arrow keys. `ALT+DELETE` remains strictly reserved for permanent management.
 3. **Privacy First:** If an LLM response or compiler output accidentally leaks a token, a password, or a massive wall of useless text into your stream, you can wipe it from your disk (`~/.quote_history`) instantly without opening a text editor.
